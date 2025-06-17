@@ -11,12 +11,17 @@ export default function Game() {
   const [spielLaeuft, setSpielLaeuft] = useState(false);
   const [munition, setMunition] = useState(6);
   const [gegner, setGegner] = useState([]);
+  const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
+  const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
+  const leerSound = new Audio("/src/assets/sounds/leer.mp3");
 
   const damage = 15;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === "Space" && spielLaeuft) {
+        nachladenSound.currentTime = 0;
+         nachladenSound.play();
         setMunition(6);
       }
     };
@@ -73,10 +78,35 @@ export default function Game() {
   }, [spielLaeuft, zeit]);
 
   const spawnPokemon = async () => {
+    const spawnFenster = [
+      { top: 800, left: 280 },
+      { top: 800, left: 580 },
+      { top: 800, left: 780 },
+      { top: 800, left: 1180 },
+      { top: 800, left: 1300 },
+      { top: 130, left: 520 },
+      { top: 130, left: 720 },
+      { top: 130, left: 920 },
+      { top: 130, left: 1120 },
+      { top: 130, left: 1320 },
+      { top: 130, left: 1520 },
+      { top: 380, left: 1520 },
+      { top: 380, left: 320 },
+      { top: 380, left: 520 },
+      { top: 380, left: 720 },
+      { top: 380, left: 920 },
+      { top: 380, left: 1120 },
+      { top: 380, left: 1320 },
+      { top: 650, left: 520 },
+      { top: 650, left: 720 },
+      { top: 650, left: 1120 },
+      { top: 650, left: 1320 },
+    ];
     try {
       const res = await api.get("/pokemon/random");
       const data = res.data;
       console.log("Punkte: ", res.data);
+       const zufallsPosition = spawnFenster[Math.floor(Math.random() * spawnFenster.length)];
       const gegnerObj = {
         idInstance: crypto.randomUUID(),
         name: data.name,
@@ -84,10 +114,7 @@ export default function Game() {
         maxHp: data.hp,
         currentHp: data.hp,
         xp: data.xp || 100,
-        position: {
-          top: Math.floor(Math.random() * 400) + 200,
-          left: Math.floor(Math.random() * 1000) + 200,
-        },
+        position: zufallsPosition,
       };
 
       setGegner((prev) => [...prev, gegnerObj]);
@@ -100,7 +127,14 @@ export default function Game() {
  
 
   const handleShoot = () => {
-    if (!spielLaeuft || munition <= 0) return;
+    if (!spielLaeuft || munition <= 0){
+      leerSound.currentTime = 0;
+      leerSound.play();
+      return;
+    } 
+    schussSound.volume = 0.5;
+    schussSound.currentTime = 0;
+    schussSound.play();
     setMunition((m) => m - 1);
   };
 
