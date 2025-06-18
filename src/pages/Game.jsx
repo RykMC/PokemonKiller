@@ -1,6 +1,7 @@
 // src/pages/Game.jsx
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+ import countdownSound from "../assets/sounds/countdown3to0.mp3";
 
 export default function Game() {
   const [spielerName, setSpielerName] = useState("");
@@ -59,7 +60,7 @@ export default function Game() {
     }
     const interval = setInterval(() => {
       setZeit((z) => z - 1);
-    }, 2000);
+    }, 1000);
     return () => clearInterval(interval);
   }, [spielLaeuft, zeit]);
 
@@ -85,29 +86,31 @@ export default function Game() {
 
 const spawnPokemon = async () => {
   const spawnFenster = [
-    { top: 800, left: 280 },
-    { top: 800, left: 580 },
-    { top: 800, left: 780 },
-    { top: 800, left: 1180 },
-    { top: 800, left: 1300 },
-    { top: 130, left: 520 },
-    { top: 130, left: 720 },
-    { top: 130, left: 920 },
-    { top: 130, left: 1120 },
-    { top: 130, left: 1320 },
-    { top: 130, left: 1520 },
-    { top: 380, left: 1520 },
-    { top: 380, left: 320 },
-    { top: 380, left: 520 },
-    { top: 380, left: 720 },
-    { top: 380, left: 920 },
-    { top: 380, left: 1120 },
-    { top: 380, left: 1320 },
-    { top: 650, left: 520 },
-    { top: 650, left: 720 },
-    { top: 650, left: 1120 },
-    { top: 650, left: 1320 },
-  ];
+      { top: 600, left: 180 },
+      { top: 600, left: 380 },
+      { top: 600, left: 580 },
+      { top: 600, left: 780 },
+      { top: 600, left: 980 },
+      { top: 80, left: 150 },
+      { top: 80, left: 300 },
+      { top: 80, left: 450 },
+      { top: 80, left: 600 },
+      { top: 80, left: 750 },
+      { top: 80, left: 900 },
+      { top: 80, left: 1050 },
+      { top: 260, left: 150 },
+      { top: 260, left: 300 },
+      { top: 260, left: 450 },
+      { top: 260, left: 600 },
+      { top: 260, left: 750 },
+      { top: 260, left: 900 },
+      { top: 260, left: 1050 },
+      { top: 450, left: 300 },
+      { top: 450, left: 450 },
+      { top: 450, left: 750 },
+      { top: 450, left: 900 },
+    ];
+    
 
   try {
     const res = await api.get("/pokemon/random");
@@ -233,9 +236,17 @@ const handleTreffer = (idInstance) => {
   });
 };
 
-
+  useEffect(() => {
+    if (nameConfirmed) {
+      const audio = new Audio(countdownSound);
+      audio.playbackRate = 1.1;
+      audio.play();
+      setCountdown(3);
+    }
+  }, [nameConfirmed]);
 
   if (!nameConfirmed) {
+    
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold mb-6">Dein Name?</h1>
@@ -288,15 +299,14 @@ const handleTreffer = (idInstance) => {
   }
 
 
-  return (
-    <div className="relative min-h-screen cursor-crosshair">
+  return (<div className="relative w-[1280px] h-[720px] mx-auto cursor-crosshair overflow-hidden bg-black">
       <img
         src="/src/assets/bg1_game.png"
         alt="Spielfeld"
         className="absolute inset-0 w-full h-full object-contain z-0"
       />
 
-      <div className="absolute inset-0 z-10" onClick={handleShoot}>
+      <div className="absolute inset-0 z-10" onClick={handleShoot} bg-black>
         {/* HUD */}
         <div className="absolute top-4 left-4 bg-black/60 text-white px-4 py-2 rounded shadow">
           Zeit: {zeit}s
