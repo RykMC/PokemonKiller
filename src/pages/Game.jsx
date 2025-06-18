@@ -21,7 +21,7 @@ export default function Game() {
     const handleKeyDown = (e) => {
       if (e.code === "Space" && spielLaeuft) {
         nachladenSound.currentTime = 0;
-         nachladenSound.play();
+        nachladenSound.play();
         setMunition(6);
       }
     };
@@ -77,107 +77,118 @@ export default function Game() {
     return () => clearTimeout(spawnTimeout);
   }, [spielLaeuft, zeit]);
 
-const spawnPokemon = async () => {
-  const spawnFenster = [
-    { top: 800, left: 280 },
-    { top: 800, left: 580 },
-    { top: 800, left: 780 },
-    { top: 800, left: 1180 },
-    { top: 800, left: 1300 },
-    { top: 130, left: 520 },
-    { top: 130, left: 720 },
-    { top: 130, left: 920 },
-    { top: 130, left: 1120 },
-    { top: 130, left: 1320 },
-    { top: 130, left: 1520 },
-    { top: 380, left: 1520 },
-    { top: 380, left: 320 },
-    { top: 380, left: 520 },
-    { top: 380, left: 720 },
-    { top: 380, left: 920 },
-    { top: 380, left: 1120 },
-    { top: 380, left: 1320 },
-    { top: 650, left: 520 },
-    { top: 650, left: 720 },
-    { top: 650, left: 1120 },
-    { top: 650, left: 1320 },
-  ];
+  const spawnPokemon = async () => {
+    // const spawnFenster = [
+    const spawnFenster = [
+      { top: "80%", left: "20%" },
+      { top: "80%", left: "40%" },
+      { top: "80%", left: "60%" },
+      { top: "80%", left: "80%" },
+      { top: "20%", left: "15%" },
+      { top: "20%", left: "35%" },
+      { top: "20%", left: "55%" },
+      { top: "20%", left: "75%" },
+      { top: "20%", left: "95%" },
+      { top: "50%", left: "30%" },
+      { top: "50%", left: "50%" },
+      { top: "50%", left: "70%" },
+    ];
+    //   { top: 800, left: 280 },
+    //   { top: 800, left: 580 },
+    //   { top: 800, left: 780 },
+    //   { top: 800, left: 1180 },
+    //   { top: 800, left: 1300 },
+    //   { top: 130, left: 520 },
+    //   { top: 130, left: 720 },
+    //   { top: 130, left: 920 },
+    //   { top: 130, left: 1120 },
+    //   { top: 130, left: 1320 },
+    //   { top: 130, left: 1520 },
+    //   { top: 380, left: 1520 },
+    //   { top: 380, left: 320 },
+    //   { top: 380, left: 520 },
+    //   { top: 380, left: 720 },
+    //   { top: 380, left: 920 },
+    //   { top: 380, left: 1120 },
+    //   { top: 380, left: 1320 },
+    //   { top: 650, left: 520 },
+    //   { top: 650, left: 720 },
+    //   { top: 650, left: 1120 },
+    //   { top: 650, left: 1320 },
+    // ];
 
-  try {
-    const res = await api.get("/pokemon/random");
-    const data = res.data;
+    try {
+      const res = await api.get("/pokemon/random");
+      const data = res.data;
 
-    // blockierte Positionen rausfiltern
-    const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
-    const freieFenster = spawnFenster.filter(
-      (pos) => !belegte.includes(`${pos.top}-${pos.left}`)
-    );
-
-    if (freieFenster.length === 0) return; // alles voll
-
-    const zufallsPosition =
-      freieFenster[Math.floor(Math.random() * freieFenster.length)];
-
-    const gegnerObj = {
-      idInstance: crypto.randomUUID(),
-      name: data.name,
-      sprite: data.sprite,
-      maxHp: data.hp,
-      currentHp: data.hp,
-      xp: data.xp || 100,
-      position: zufallsPosition,
-    };
-
-    setGegner((prev) => [...prev, gegnerObj]);
-
-    // automatisch nach 6 Sekunden wieder entfernen
-    setTimeout(() => {
-      setGegner((prev) =>
-        prev.filter((g) => g.idInstance !== gegnerObj.idInstance)
+      // blockierte Positionen rausfiltern
+      const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
+      const freieFenster = spawnFenster.filter(
+        (pos) => !belegte.includes(`${pos.top}-${pos.left}`)
       );
-    }, 6000);
-  } catch (err) {
-    console.error("Fehler beim Laden vom Backend:", err);
-  }
-};
 
+      if (freieFenster.length === 0) return; // alles voll
 
- 
+      const zufallsPosition =
+        freieFenster[Math.floor(Math.random() * freieFenster.length)];
+
+      const gegnerObj = {
+        idInstance: crypto.randomUUID(),
+        name: data.name,
+        sprite: data.sprite,
+        maxHp: data.hp,
+        currentHp: data.hp,
+        xp: data.xp || 100,
+        position: zufallsPosition,
+      };
+
+      setGegner((prev) => [...prev, gegnerObj]);
+
+      // automatisch nach 6 Sekunden wieder entfernen
+      setTimeout(() => {
+        setGegner((prev) =>
+          prev.filter((g) => g.idInstance !== gegnerObj.idInstance)
+        );
+      }, 6000);
+    } catch (err) {
+      console.error("Fehler beim Laden vom Backend:", err);
+    }
+  };
 
   const handleShoot = () => {
-    if (!spielLaeuft || munition <= 0){
+    if (!spielLaeuft || munition <= 0) {
       leerSound.currentTime = 0;
       leerSound.play();
       return;
-    } 
+    }
     schussSound.volume = 0.5;
     schussSound.currentTime = 0;
     schussSound.play();
     setMunition((m) => m - 1);
   };
 
- const handleTreffer = (idInstance) => {
-  setGegner((prev) => {
-    let xpBonus = 0;
+  const handleTreffer = (idInstance) => {
+    setGegner((prev) => {
+      let xpBonus = 0;
 
-    const updated = prev.map((g) => {
-      if (g.idInstance === idInstance) {
-        const newHp = g.currentHp - damage;
-        if (newHp <= 0) {
-          xpBonus = g.maxHp || 10; // XP sichern
+      const updated = prev.map((g) => {
+        if (g.idInstance === idInstance) {
+          const newHp = g.currentHp - damage;
+          if (newHp <= 0) {
+            xpBonus = g.maxHp || 10; // XP sichern
+          }
+          return { ...g, currentHp: newHp };
         }
-        return { ...g, currentHp: newHp };
+        return g;
+      });
+
+      if (xpBonus > 0) {
+        setPunkte((p) => p + xpBonus);
       }
-      return g;
+
+      return updated.filter((g) => g.currentHp > 0);
     });
-
-    if (xpBonus > 0) {
-      setPunkte((p) => p + xpBonus);
-    }
-
-    return updated.filter((g) => g.currentHp > 0);
-  });
-};
+  };
 
   if (!nameConfirmed) {
     return (
@@ -209,6 +220,36 @@ const spawnPokemon = async () => {
     );
   }
 
+  if (!spielLaeuft && zeit <= 0) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+        <h1 className="text-4xl font-bold mb-6">🎯 Spiel beendet!</h1>
+        <p className="text-2xl mb-4">
+          Dein Score: <strong>{punkte}</strong> Punkte
+        </p>
+
+        {/* <button
+          onClick={async () => {
+            try {
+              await api.post("/leaderboard", {
+                username: spielerName,
+                score: punkte,
+                date: new Date().toISOString(),
+              });
+              window.location.href = "/leaderboard";
+            } catch (err) {
+              alert("❌ Fehler beim Speichern des Scores!");
+              console.error(err);
+            }
+          }}
+          className="bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-3 rounded-lg shadow-lg"
+        >
+          Score absenden & Leaderboard ansehen
+        </button> */}
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen cursor-crosshair">
       <img
@@ -231,7 +272,9 @@ const spawnPokemon = async () => {
           {Array.from({ length: 6 }).map((_, index) => (
             <div
               key={index}
-              className={`w-4 h-8 border-2 rounded-sm ${index < munition ? "bg-yellow-400" : "bg-gray-600"}`}
+              className={`w-4 h-8 border-2 rounded-sm ${
+                index < munition ? "bg-yellow-400" : "bg-gray-600"
+              }`}
             ></div>
           ))}
         </div>
@@ -240,7 +283,11 @@ const spawnPokemon = async () => {
         {gegner.map((g) => (
           <div
             key={g.idInstance}
-            style={{ position: "absolute", top: g.position.top, left: g.position.left }}
+            style={{
+              position: "absolute",
+              top: g.position.top,
+              left: g.position.left,
+            }}
             onClick={(e) => {
               e.stopPropagation();
               if (munition > 0) {
