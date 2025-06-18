@@ -12,11 +12,14 @@ export default function Game() {
   const [munition, setMunition] = useState(6);
   const [gegner, setGegner] = useState([]);
   const [besiegtePokemons, setBesiegtePokemons] = useState([]);
+
   const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
   const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
   const leerSound = new Audio("/src/assets/sounds/leer.mp3");
 
   const damage = 15;
+
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -175,10 +178,12 @@ const spawnPokemon = async () => {
       leerSound.play();
       return;
     } 
+
     schussSound.volume = 0.5;
     schussSound.currentTime = 0;
     schussSound.play();
     setMunition((m) => m - 1);
+    
   };
 
 const handleTreffer = (idInstance) => {
@@ -332,7 +337,9 @@ const handleTreffer = (idInstance) => {
               ></div>
             </div>
           </div>
+          
         ))}
+      
       </div>
     </div>
   );
