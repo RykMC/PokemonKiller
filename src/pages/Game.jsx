@@ -11,6 +11,7 @@ export default function Game() {
   const [spielLaeuft, setSpielLaeuft] = useState(false);
   const [munition, setMunition] = useState(6);
   const [gegner, setGegner] = useState([]);
+  const [besiegtePokemons, setBesiegtePokemons] = useState([]);
   const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
   const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
   const leerSound = new Audio("/src/assets/sounds/leer.mp3");
@@ -55,7 +56,7 @@ export default function Game() {
     }
     const interval = setInterval(() => {
       setZeit((z) => z - 1);
-    }, 1000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [spielLaeuft, zeit]);
 
@@ -76,6 +77,8 @@ export default function Game() {
     spawnPokemon();
     return () => clearTimeout(spawnTimeout);
   }, [spielLaeuft, zeit]);
+
+
 
 const spawnPokemon = async () => {
   const spawnFenster = [
@@ -106,6 +109,9 @@ const spawnPokemon = async () => {
   try {
     const res = await api.get("/pokemon/random");
     const data = res.data;
+    console.log(res.data);
+
+    const soundUrl = res.data.cry;
 
     // blockierte Positionen rausfiltern
     const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
@@ -130,6 +136,13 @@ const spawnPokemon = async () => {
 
     setGegner((prev) => [...prev, gegnerObj]);
 
+    // Sound erst jetzt abspielen (nach dem spawn)
+    if (soundUrl) {
+      const audio = new Audio(soundUrl);
+      audio.volume = 0.1;
+      audio.play().catch((err) => console.warn("Soundfehler:", err));
+    }
+
     // automatisch nach 6 Sekunden wieder entfernen
     setTimeout(() => {
       setGegner((prev) =>
@@ -142,7 +155,19 @@ const spawnPokemon = async () => {
 };
 
 
- 
+  const handleSave = async () => {
+     try {
+          const data = await api.post("/leaderboard", {
+                username: spielerName,
+                score: punkte,
+                date: new Date().toISOString(),
+              });
+      console.log("Gespeichert:", data);
+    } catch (err) {
+      console.log("Fehler beim Speichern:", err);
+    }
+  };
+    
 
   const handleShoot = () => {
     if (!spielLaeuft || munition <= 0){
@@ -156,28 +181,54 @@ const spawnPokemon = async () => {
     setMunition((m) => m - 1);
   };
 
- const handleTreffer = (idInstance) => {
+const handleTreffer = (idInstance) => {
   setGegner((prev) => {
-    let xpBonus = 0;
+    const neueListe = [];
+    let besiegter = null;
 
-    const updated = prev.map((g) => {
+    for (const g of prev) {
       if (g.idInstance === idInstance) {
         const newHp = g.currentHp - damage;
         if (newHp <= 0) {
-          xpBonus = g.maxHp || 10; // XP sichern
+          besiegter = g;
+          continue; // NICHT in neueListe pushen – Gegner ist tot
         }
-        return { ...g, currentHp: newHp };
+        neueListe.push({ ...g, currentHp: newHp });
+      } else {
+        neueListe.push(g); // Unverändert rein
       }
-      return g;
-    });
-
-    if (xpBonus > 0) {
-      setPunkte((p) => p + xpBonus);
     }
 
-    return updated.filter((g) => g.currentHp > 0);
+    if (besiegter) {
+      const xpBonus = besiegter.maxHp || 10;
+      setPunkte((p) => p + xpBonus);
+
+      setBesiegtePokemons((prevKills) => {
+        const already = prevKills.find((p) => p.name === besiegter.name);
+        if (already) {
+          return prevKills.map((p) =>
+            p.name === besiegter.name
+              ? { ...p, anzahl: p.anzahl + 1 }
+              : p
+          );
+        } else {
+          return [
+            ...prevKills,
+            {
+              name: besiegter.name,
+              sprite: besiegter.sprite,
+              anzahl: 1,
+            },
+          ];
+        }
+      });
+    }
+
+    return neueListe;
   });
 };
+
+
 
   if (!nameConfirmed) {
     return (
@@ -208,6 +259,29 @@ const spawnPokemon = async () => {
       </div>
     );
   }
+    if (!spielLaeuft && zeit === 0) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+        <h1 className="text-4xl font-bold mb-6">Spiel vorbei!</h1>
+        <p className="text-xl mb-4">Punkte: {punkte}</p>
+        <div className="grid grid-cols-2 md:grid-cols-8 gap-6">
+          {besiegtePokemons.map((poke) => (
+            <div key={poke.name} className="text-center">
+              <img src={poke.sprite} alt={poke.name} className="w-20 mx-auto" />
+              <p className="text-sm mt-1">{poke.name}</p>
+              <p className="text-yellow-400 font-bold">× {poke.anzahl}</p>
+            </div>
+          ))}
+        </div>
+        <a href="/">
+          <div className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg text-lg shadow-lg border border-white" onClick= {handleSave}>
+            Zurück zum Start
+          </div>
+        </a>
+      </div>
+    );
+  }
+
 
   return (
     <div className="relative min-h-screen cursor-crosshair">
