@@ -77,51 +77,69 @@ export default function Game() {
     return () => clearTimeout(spawnTimeout);
   }, [spielLaeuft, zeit]);
 
-  const spawnPokemon = async () => {
-    const spawnFenster = [
-      { top: 800, left: 280 },
-      { top: 800, left: 580 },
-      { top: 800, left: 780 },
-      { top: 800, left: 1180 },
-      { top: 800, left: 1300 },
-      { top: 130, left: 520 },
-      { top: 130, left: 720 },
-      { top: 130, left: 920 },
-      { top: 130, left: 1120 },
-      { top: 130, left: 1320 },
-      { top: 130, left: 1520 },
-      { top: 380, left: 1520 },
-      { top: 380, left: 320 },
-      { top: 380, left: 520 },
-      { top: 380, left: 720 },
-      { top: 380, left: 920 },
-      { top: 380, left: 1120 },
-      { top: 380, left: 1320 },
-      { top: 650, left: 520 },
-      { top: 650, left: 720 },
-      { top: 650, left: 1120 },
-      { top: 650, left: 1320 },
-    ];
-    try {
-      const res = await api.get("/pokemon/random");
-      const data = res.data;
-      console.log("Punkte: ", res.data);
-       const zufallsPosition = spawnFenster[Math.floor(Math.random() * spawnFenster.length)];
-      const gegnerObj = {
-        idInstance: crypto.randomUUID(),
-        name: data.name,
-        sprite: data.sprite,
-        maxHp: data.hp,
-        currentHp: data.hp,
-        xp: data.xp || 100,
-        position: zufallsPosition,
-      };
+const spawnPokemon = async () => {
+  const spawnFenster = [
+    { top: 800, left: 280 },
+    { top: 800, left: 580 },
+    { top: 800, left: 780 },
+    { top: 800, left: 1180 },
+    { top: 800, left: 1300 },
+    { top: 130, left: 520 },
+    { top: 130, left: 720 },
+    { top: 130, left: 920 },
+    { top: 130, left: 1120 },
+    { top: 130, left: 1320 },
+    { top: 130, left: 1520 },
+    { top: 380, left: 1520 },
+    { top: 380, left: 320 },
+    { top: 380, left: 520 },
+    { top: 380, left: 720 },
+    { top: 380, left: 920 },
+    { top: 380, left: 1120 },
+    { top: 380, left: 1320 },
+    { top: 650, left: 520 },
+    { top: 650, left: 720 },
+    { top: 650, left: 1120 },
+    { top: 650, left: 1320 },
+  ];
 
-      setGegner((prev) => [...prev, gegnerObj]);
-    } catch (err) {
-      console.error("Fehler beim Laden vom Backend:", err);
-    }
-  };
+  try {
+    const res = await api.get("/pokemon/random");
+    const data = res.data;
+
+    // blockierte Positionen rausfiltern
+    const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
+    const freieFenster = spawnFenster.filter(
+      (pos) => !belegte.includes(`${pos.top}-${pos.left}`)
+    );
+
+    if (freieFenster.length === 0) return; // alles voll
+
+    const zufallsPosition =
+      freieFenster[Math.floor(Math.random() * freieFenster.length)];
+
+    const gegnerObj = {
+      idInstance: crypto.randomUUID(),
+      name: data.name,
+      sprite: data.sprite,
+      maxHp: data.hp,
+      currentHp: data.hp,
+      xp: data.xp || 100,
+      position: zufallsPosition,
+    };
+
+    setGegner((prev) => [...prev, gegnerObj]);
+
+    // automatisch nach 6 Sekunden wieder entfernen
+    setTimeout(() => {
+      setGegner((prev) =>
+        prev.filter((g) => g.idInstance !== gegnerObj.idInstance)
+      );
+    }, 6000);
+  } catch (err) {
+    console.error("Fehler beim Laden vom Backend:", err);
+  }
+};
 
 
  
