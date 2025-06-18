@@ -1,7 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import Game from './pages/Game';
-import LeaderboardPage from './pages/LeaderboardPage';
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Game from "./pages/Game";
+import LeaderboardPage from "./pages/LeaderboardPage.js";
 
 export default function App() {
   return (

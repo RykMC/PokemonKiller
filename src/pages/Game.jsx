@@ -25,7 +25,7 @@ export default function Game() {
     const handleKeyDown = (e) => {
       if (e.code === "Space" && spielLaeuft) {
         nachladenSound.currentTime = 0;
-         nachladenSound.play();
+        nachladenSound.play();
         setMunition(6);
       }
     };
@@ -116,26 +116,26 @@ const spawnPokemon = async () => {
 
     const soundUrl = res.data.cry;
 
-    // blockierte Positionen rausfiltern
-    const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
-    const freieFenster = spawnFenster.filter(
-      (pos) => !belegte.includes(`${pos.top}-${pos.left}`)
-    );
+      // blockierte Positionen rausfiltern
+      const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
+      const freieFenster = spawnFenster.filter(
+        (pos) => !belegte.includes(`${pos.top}-${pos.left}`)
+      );
 
-    if (freieFenster.length === 0) return; // alles voll
+      if (freieFenster.length === 0) return; // alles voll
 
-    const zufallsPosition =
-      freieFenster[Math.floor(Math.random() * freieFenster.length)];
+      const zufallsPosition =
+        freieFenster[Math.floor(Math.random() * freieFenster.length)];
 
-    const gegnerObj = {
-      idInstance: crypto.randomUUID(),
-      name: data.name,
-      sprite: data.sprite,
-      maxHp: data.hp,
-      currentHp: data.hp,
-      xp: data.xp || 100,
-      position: zufallsPosition,
-    };
+      const gegnerObj = {
+        idInstance: crypto.randomUUID(),
+        name: data.name,
+        sprite: data.sprite,
+        maxHp: data.hp,
+        currentHp: data.hp,
+        xp: data.xp || 100,
+        position: zufallsPosition,
+      };
 
     setGegner((prev) => [...prev, gegnerObj]);
 
@@ -173,7 +173,7 @@ const spawnPokemon = async () => {
     
 
   const handleShoot = () => {
-    if (!spielLaeuft || munition <= 0){
+    if (!spielLaeuft || munition <= 0) {
       leerSound.currentTime = 0;
       leerSound.play();
       return;
@@ -310,7 +310,9 @@ const handleTreffer = (idInstance) => {
           {Array.from({ length: 6 }).map((_, index) => (
             <div
               key={index}
-              className={`w-4 h-8 border-2 rounded-sm ${index < munition ? "bg-yellow-400" : "bg-gray-600"}`}
+              className={`w-4 h-8 border-2 rounded-sm ${
+                index < munition ? "bg-yellow-400" : "bg-gray-600"
+              }`}
             ></div>
           ))}
         </div>
@@ -319,7 +321,11 @@ const handleTreffer = (idInstance) => {
         {gegner.map((g) => (
           <div
             key={g.idInstance}
-            style={{ position: "absolute", top: g.position.top, left: g.position.left }}
+            style={{
+              position: "absolute",
+              top: g.position.top,
+              left: g.position.left,
+            }}
             onClick={(e) => {
               e.stopPropagation();
               if (munition > 0) {
