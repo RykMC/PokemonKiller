@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import api from "../api/axios"; // dein axios-Setup
+import { useEffect, useState } from "react";
+import api from "../api/axios";
 import Leaderboard from "../components/Leaderboard";
 
 export default function LeaderboardPage() {
@@ -22,7 +22,7 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br from-blue-800 to-indigo-900">
+      <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br">
         <p>Lade Leaderboard...</p>
       </div>
     );

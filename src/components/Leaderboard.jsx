@@ -11,29 +11,45 @@ export default function Leaderboard({ scores }) {
         )}
 
         {scores.map((score, index) => {
-          const medal = ["🥇", "🥈", "🥉"][index] || "🎮";
+          console.log(score);
+          const platz = index + 1;
+          const medal = ["🥇", "🥈", "🥉"][index] || `${platz}.`;
           return (
             <div
               key={score._id}
               className="flex justify-between items-center bg-yellow-300/40 hover:bg-yellow-500/80 transition-colors rounded-md p-4 mb-3 shadow-lg"
             >
               <div className="flex items-center gap-4">
-                <span className="text-3xl">{medal}</span>
+                <span className="text-3xl w-10 text-center">{medal}</span>
                 <div className="flex flex-col">
                   <span className="text-xl font-semibold">
                     {score.username}
                   </span>
+
+                  {/* Datum  anzeigen */}
                   <span className="text-xs text-gray-300">
                     {new Date(score.date).toLocaleDateString("de-DE")}
                   </span>
+
+                  {/* Uhrzeit anzeigen */}
+                  <span className="h-auto w-auto text-yellow-300 font-bold text-xs rounded">
+                    {new Date(score.date).toLocaleTimeString("de-DE", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }) + " Uhr"}
+                  </span>
                 </div>
               </div>
+             <div className="flex items-center gap-4 mb-6">
+              {/* Pokéball links */}
+              <img src={pokeballIcon} alt="Pokéball" className="w-8 h-8 self-start mt-1" />
 
-              <div className="flex items-center gap-2 text-yellow-400 font-bold text-lg">
-                <img src={pokeballIcon} alt="Pokéball" className="w-6 h-6" />
-
-                <span>{score.score}</span>
+              {/* Texte rechts */}
+              <div className="flex flex-col">
+                <p className="text-xl">Punkte: {score.score}</p>
+                <p className="text-xl">Kills: {score.anzahl}</p>
               </div>
+            </div>
             </div>
           );
         })}
