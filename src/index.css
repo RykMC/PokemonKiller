@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
-#root, html {
-    background: #000;
+#root,
+html {
+  background: #000;
+}
+
+/* Feedback Animation */
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+.animate-fadeout {
+  animation: fadeout 1.5s ease-out forwards;
 }

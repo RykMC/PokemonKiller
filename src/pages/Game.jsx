@@ -1,7 +1,7 @@
 // src/pages/Game.jsx
 import { useEffect, useState } from "react";
 import api from "../api/axios";
- import countdownSound from "../assets/sounds/countdown3to0.mp3";
+import countdownSound from "../assets/sounds/countdown3to0.mp3";
 
 export default function Game() {
   const [spielerName, setSpielerName] = useState("");
@@ -14,13 +14,42 @@ export default function Game() {
   const [gegner, setGegner] = useState([]);
   const [besiegtePokemons, setBesiegtePokemons] = useState([]);
 
+  const [items, setItems] = useState([]);
+  const [itemFreeze, setItemFreeze] = useState(false);
+
   const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
   const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
   const leerSound = new Audio("/src/assets/sounds/leer.mp3");
 
+  // Visuelles Feedback
+  const [feedbacks, setFeedbacks] = useState([]);
+
   const damage = 15;
 
+  //Logic von den Items
+  const itemEffekte = {
+    // mystery: () => setPunkte((p) => p + 50),
+    mystery: (position) => {
+      const zufall = Math.random();
+      if (zufall < 0.6) {
+        // Zufällig +50 Punkte
+        setPunkte((p) => p + 50);
+        showFeedback("+50", position);
+      } else {
+        // Zufällig  -30 Punkte
+        setPunkte((p) => Math.max(0, p - 30));
+        showFeedback("-30", position);
+      }
+    },
 
+    reload: () => setMunition(6), //Munition wird auf 6 gesetzt
+    freeze: () => {
+      setItemFreeze(true);
+      setTimeout(() => setItemFreeze(false), 5000); //einfrieren für 5 Sekunden
+    },
+    time: () => setZeit((z) => z + 10),
+    // bombe: () => setPunkte((p) => Math.max(0, p - 40)),
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -58,6 +87,7 @@ export default function Game() {
       setSpielLaeuft(false);
       return;
     }
+
     const interval = setInterval(() => {
       setZeit((z) => z - 1);
     }, 1000);
@@ -66,7 +96,6 @@ export default function Game() {
 
   useEffect(() => {
     if (!spielLaeuft) return;
-
     let spawnTimeout;
 
     const spawnLoop = () => {
@@ -82,10 +111,45 @@ export default function Game() {
     return () => clearTimeout(spawnTimeout);
   }, [spielLaeuft, zeit]);
 
+  //useEffect für die Bonus
+  useEffect(() => {
+    if (!spielLaeuft) return;
+    const interval = setInterval(() => {
+      const itemTypes = ["mystery", "reload", "freeze", "time"];
+      const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+      const pos = {
+        top: Math.floor(Math.random() * 500 + 100),
+        left: Math.floor(Math.random() * 1000 + 100),
+      };
+      const neuesItem = {
+        id: crypto.randomUUID(),
+        type,
+        position: pos,
+      };
 
+      setItems((prev) => [...prev, neuesItem]);
 
-const spawnPokemon = async () => {
-  const spawnFenster = [
+      setTimeout(() => {
+        setItems((prev) => prev.filter((i) => i.id !== neuesItem.id));
+      }, 10000);
+    }, Math.random() * 2000 + 3000);
+    return () => clearInterval(interval);
+  }, [spielLaeuft]);
+
+  const showFeedback = (text, position) => {
+    if (!position || !position.top || !position.left) {
+      console.warn("Ungültige Position für Feedback:", position);
+      return;
+    }
+    const id = crypto.randomUUID();
+    setFeedbacks((prev) => [...prev, { id, text, position }]);
+    setTimeout(() => {
+      setFeedbacks((prev) => prev.filter((f) => f.id !== id));
+    }, 1500);
+  };
+
+  const spawnPokemon = async () => {
+    const spawnFenster = [
       { top: 600, left: 180 },
       { top: 600, left: 380 },
       { top: 600, left: 580 },
@@ -110,14 +174,13 @@ const spawnPokemon = async () => {
       { top: 450, left: 750 },
       { top: 450, left: 900 },
     ];
-    
 
-  try {
-    const res = await api.get("/pokemon/random");
-    const data = res.data;
-    console.log(res.data);
+    try {
+      const res = await api.get("/pokemon/random");
+      const data = res.data;
+      console.log(res.data);
 
-    const soundUrl = res.data.cry;
+      const soundUrl = res.data.cry;
 
       // blockierte Positionen rausfiltern
       const belegte = gegner.map((g) => `${g.position.top}-${g.position.left}`);
@@ -140,101 +203,96 @@ const spawnPokemon = async () => {
         position: zufallsPosition,
       };
 
-    setGegner((prev) => [...prev, gegnerObj]);
+      setGegner((prev) => [...prev, gegnerObj]);
 
-    // Sound erst jetzt abspielen (nach dem spawn)
-    if (soundUrl) {
-      const audio = new Audio(soundUrl);
-      audio.volume = 0.1;
-      audio.play().catch((err) => console.warn("Soundfehler:", err));
+      // Sound erst jetzt abspielen (nach dem spawn)
+      if (soundUrl) {
+        const audio = new Audio(soundUrl);
+        audio.volume = 0.1;
+        audio.play().catch((err) => console.warn("Soundfehler:", err));
+      }
+
+      // automatisch nach 6 Sekunden wieder entfernen
+      setTimeout(() => {
+        setGegner((prev) =>
+          prev.filter((g) => g.idInstance !== gegnerObj.idInstance)
+        );
+      }, 6000);
+    } catch (err) {
+      console.error("Fehler beim Laden vom Backend:", err);
     }
-
-    // automatisch nach 6 Sekunden wieder entfernen
-    setTimeout(() => {
-      setGegner((prev) =>
-        prev.filter((g) => g.idInstance !== gegnerObj.idInstance)
-      );
-    }, 6000);
-  } catch (err) {
-    console.error("Fehler beim Laden vom Backend:", err);
-  }
-};
-
+  };
 
   const handleSave = async () => {
-     try {
-          const data = await api.post("/leaderboard", {
-                username: spielerName,
-                score: punkte,
-                date: new Date().toISOString(),
-              });
+    try {
+      const data = await api.post("/leaderboard", {
+        username: spielerName,
+        score: punkte,
+        date: new Date().toISOString(),
+      });
       console.log("Gespeichert:", data);
     } catch (err) {
       console.log("Fehler beim Speichern:", err);
     }
   };
-    
 
   const handleShoot = () => {
     if (!spielLaeuft || munition <= 0) {
       leerSound.currentTime = 0;
       leerSound.play();
       return;
-    } 
+    }
 
     schussSound.volume = 0.5;
     schussSound.currentTime = 0;
     schussSound.play();
     setMunition((m) => m - 1);
-    
   };
 
-const handleTreffer = (idInstance) => {
-  setGegner((prev) => {
-    const neueListe = [];
-    let besiegter = null;
+  const handleTreffer = (idInstance) => {
+    setGegner((prev) => {
+      const neueListe = [];
+      let besiegter = null;
 
-    for (const g of prev) {
-      if (g.idInstance === idInstance) {
-        const newHp = g.currentHp - damage;
-        if (newHp <= 0) {
-          besiegter = g;
-          continue; // NICHT in neueListe pushen – Gegner ist tot
-        }
-        neueListe.push({ ...g, currentHp: newHp });
-      } else {
-        neueListe.push(g); // Unverändert rein
-      }
-    }
-
-    if (besiegter) {
-      const xpBonus = besiegter.maxHp || 10;
-      setPunkte((p) => p + xpBonus);
-
-      setBesiegtePokemons((prevKills) => {
-        const already = prevKills.find((p) => p.name === besiegter.name);
-        if (already) {
-          return prevKills.map((p) =>
-            p.name === besiegter.name
-              ? { ...p, anzahl: p.anzahl + 1 }
-              : p
-          );
+      for (const g of prev) {
+        if (g.idInstance === idInstance) {
+          const newHp = g.currentHp - damage;
+          if (newHp <= 0) {
+            besiegter = g;
+            continue; // NICHT in neueListe pushen – Gegner ist tot
+          }
+          neueListe.push({ ...g, currentHp: newHp });
         } else {
-          return [
-            ...prevKills,
-            {
-              name: besiegter.name,
-              sprite: besiegter.sprite,
-              anzahl: 1,
-            },
-          ];
+          neueListe.push(g); // Unverändert rein
         }
-      });
-    }
+      }
 
-    return neueListe;
-  });
-};
+      if (besiegter) {
+        const xpBonus = besiegter.maxHp || 10;
+        setPunkte((p) => p + xpBonus);
+
+        setBesiegtePokemons((prevKills) => {
+          const already = prevKills.find((p) => p.name === besiegter.name);
+          if (already) {
+            return prevKills.map((p) =>
+              p.name === besiegter.name ? { ...p, anzahl: p.anzahl + 1 } : p
+            );
+          } else {
+            return [
+              ...prevKills,
+              {
+                name: besiegter.name,
+                sprite: besiegter.sprite,
+                anzahl: 1,
+              },
+            ];
+          }
+        });
+      }
+
+      return neueListe;
+    });
+  };
 
   useEffect(() => {
     if (nameConfirmed) {
@@ -246,7 +304,6 @@ const handleTreffer = (idInstance) => {
   }, [nameConfirmed]);
 
   if (!nameConfirmed) {
-    
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold mb-6">Dein Name?</h1>
@@ -275,7 +332,7 @@ const handleTreffer = (idInstance) => {
       </div>
     );
   }
-    if (!spielLaeuft && zeit === 0) {
+  if (!spielLaeuft && zeit === 0) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <h1 className="text-4xl font-bold mb-6">Spiel vorbei!</h1>
@@ -290,7 +347,10 @@ const handleTreffer = (idInstance) => {
           ))}
         </div>
         <a href="/">
-          <div className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg text-lg shadow-lg border border-white" onClick= {handleSave}>
+          <div
+            className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg text-lg shadow-lg border border-white"
+            onClick={handleSave}
+          >
             Zurück zum Start
           </div>
         </a>
@@ -298,20 +358,34 @@ const handleTreffer = (idInstance) => {
     );
   }
 
-
-  return (<div className="relative w-[1280px] h-[720px] mx-auto cursor-crosshair overflow-hidden bg-black">
+  return (
+    <div className="relative w-[1280px] h-[720px] mx-auto cursor-crosshair overflow-hidden bg-black">
       <img
         src="/src/assets/bg1_game.png"
         alt="Spielfeld"
         className="absolute inset-0 w-full h-full object-contain z-0"
       />
+      {/* Feedback zeigen */}
+      {feedbacks.map((f) => (
+        <div
+          key={f.id}
+          className="absolute text-white text-xl font-bold animate-fadeout"
+          style={{
+            top: f.position.top - 20,
+            left: f.position.left,
+            pointerEvents: "none",
+          }}
+        >
+          {f.text}
+        </div>
+      ))}
 
       <div className="absolute inset-0 z-10" onClick={handleShoot} bg-black>
         {/* HUD */}
-        <div className="absolute top-4 left-4 bg-black/60 text-white px-4 py-2 rounded shadow">
+        <div className="absolute top-4 left-6 bg-yellow-300/60 text-black px-4 py-2 rounded shadow">
           Zeit: {zeit}s
         </div>
-        <div className="absolute top-4 right-4 bg-black/60 text-white px-4 py-2 rounded shadow">
+        <div className="absolute top-4 right-4  bg-yellow-300/60 text-black px-4 py-2 rounded shadow">
           Punkte: {punkte}
         </div>
 
@@ -353,9 +427,45 @@ const handleTreffer = (idInstance) => {
               ></div>
             </div>
           </div>
-          
         ))}
-      
+
+        {/* Items */}
+        {items.map((item) => {
+          const emojiMap = {
+            mystery: "🎁",
+            reload: "🔄",
+            freeze: "❄️",
+            time: "⏱️",
+            // bombe: "💣",
+          };
+          return (
+            <div
+              key={item.id}
+              className="absolute z-20 cursor-pointer text-3xl animate-bounce"
+              style={{ top: item.position.top, left: item.position.left }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const feedbackTexts = {
+                  // mystery: "???", ////Überraschung
+                  reload: "Munition voll",
+                  freeze: "❄ Freeze!",
+                  time: "+10s",
+                  // bombe: "-40",
+                };
+                if (item.type === "mystery") {
+                  itemEffekte.mystery(item.position); // Feedback  & Punkte innerhalb mystery-Bonus
+                } else {
+                  itemEffekte[item.type]?.();
+                  showFeedback(feedbackTexts[item.type] || "?", item.position);
+                }
+
+                setItems((prev) => prev.filter((i) => i.id !== item.id));
+              }}
+            >
+              {emojiMap[item.type] || "🎁"}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
