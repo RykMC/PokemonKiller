@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import pokeballIcon from "../assets/Poké_Ball_icon.svg.png";
 
+
 export default function Leaderboard({ scores }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-6">
@@ -11,7 +12,8 @@ export default function Leaderboard({ scores }) {
         )}
 
         {scores.map((score, index) => {
-          const medal = ["🥇", "🥈", "🥉"][index] || "🎮";
+          const platz = index + 1;
+          const medal = ["🥇", "🥈", "🥉"][index] || `${platz}.`;
           return (
             <div
               key={score._id}
