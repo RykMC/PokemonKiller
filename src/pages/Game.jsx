@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import countdownSound from "../assets/sounds/countdown3to0.mp3";
 
+
 export default function Game() {
   const [spielerName, setSpielerName] = useState("");
   const [nameConfirmed, setNameConfirmed] = useState(false);
@@ -13,13 +14,16 @@ export default function Game() {
   const [munition, setMunition] = useState(6);
   const [gegner, setGegner] = useState([]);
   const [besiegtePokemons, setBesiegtePokemons] = useState([]);
+  const [magazingroesse, setMagazingroesse] = useState(6);
 
   const [items, setItems] = useState([]);
   const [itemFreeze, setItemFreeze] = useState(false);
+  
 
   const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
   const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
   const leerSound = new Audio("/src/assets/sounds/leer.mp3");
+  const itemSound = new Audio("/src/assets/sounds/item.mp3");
 
   // Visuelles Feedback
   const [feedbacks, setFeedbacks] = useState([]);
@@ -42,12 +46,18 @@ export default function Game() {
       }
     },
 
-    reload: () => setMunition(6), //Munition wird auf 6 gesetzt
+    reload: () => {
+    setMagazingroesse((g) => {
+      const neueGroesse = g + 2;
+      setMunition(neueGroesse);
+      return neueGroesse;
+    });
+  },
     freeze: () => {
       setItemFreeze(true);
       setTimeout(() => setItemFreeze(false), 5000); //einfrieren für 5 Sekunden
     },
-    time: () => setZeit((z) => z + 10),
+    time: () => setZeit((z) => z + 3),
     // bombe: () => setPunkte((p) => Math.max(0, p - 40)),
   };
 
@@ -56,12 +66,12 @@ export default function Game() {
       if (e.code === "Space" && spielLaeuft) {
         nachladenSound.currentTime = 0;
         nachladenSound.play();
-        setMunition(6);
+        setMunition(magazingroesse);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [spielLaeuft]);
+  }, [spielLaeuft, magazingroesse]);
 
   useEffect(() => {
     if (nameConfirmed) {
@@ -99,17 +109,19 @@ export default function Game() {
     let spawnTimeout;
 
     const spawnLoop = () => {
-      const delay = zeit > 50 ? 3000 : zeit > 30 ? 2000 : 1000;
+      // Delay live berechnen basierend auf der aktuellen Zeit
+      const delay = zeit > 50 ? 1500 : zeit > 30 ? 1000 : 500;
+
       spawnTimeout = setTimeout(() => {
         spawnPokemon();
-        spawnLoop(); // Rekursiv weiter
+        spawnLoop(); // rekursiv
       }, delay);
     };
 
-    spawnLoop();
-    spawnPokemon();
-    return () => clearTimeout(spawnTimeout);
-  }, [spielLaeuft, zeit]);
+    spawnLoop(); // nur einmal starten
+    return () => clearTimeout(spawnTimeout); // cleanup
+  }, [spielLaeuft]);
+
 
   //useEffect für die Bonus
   useEffect(() => {
@@ -208,26 +220,37 @@ export default function Game() {
       // Sound erst jetzt abspielen (nach dem spawn)
       if (soundUrl) {
         const audio = new Audio(soundUrl);
-        audio.volume = 0.1;
+        audio.volume = 0.2;
         audio.play().catch((err) => console.warn("Soundfehler:", err));
       }
 
       // automatisch nach 6 Sekunden wieder entfernen
+      const entferneGegnerNachZeit = (id, verbleibend = 6000) => {
+      const intervall = 100;
       setTimeout(() => {
-        setGegner((prev) =>
-          prev.filter((g) => g.idInstance !== gegnerObj.idInstance)
-        );
-      }, 6000);
+        if (itemFreeze) {
+          entferneGegnerNachZeit(id, verbleibend); // solange freeze, nichts tun
+        } else if (verbleibend <= 0) {
+          setGegner((prev) => prev.filter((g) => g.idInstance !== id));
+        } else {
+          entferneGegnerNachZeit(id, verbleibend - intervall);
+        }
+      }, intervall);
+    };
+
+    entferneGegnerNachZeit(gegnerObj.idInstance);
     } catch (err) {
       console.error("Fehler beim Laden vom Backend:", err);
     }
   };
 
   const handleSave = async () => {
+      const gesamtAnzahl = besiegtePokemons.reduce((sum, poke) => sum + poke.anzahl, 0);
     try {
       const data = await api.post("/leaderboard", {
         username: spielerName,
         score: punkte,
+        anzahl: gesamtAnzahl,
         date: new Date().toISOString(),
       });
       console.log("Gespeichert:", data);
@@ -259,6 +282,7 @@ export default function Game() {
           const newHp = g.currentHp - damage;
           if (newHp <= 0) {
             besiegter = g;
+
             continue; // NICHT in neueListe pushen – Gegner ist tot
           }
           neueListe.push({ ...g, currentHp: newHp });
@@ -298,6 +322,7 @@ export default function Game() {
     if (nameConfirmed) {
       const audio = new Audio(countdownSound);
       audio.playbackRate = 1.1;
+      audio.volume = 0.2;
       audio.play();
       setCountdown(3);
     }
@@ -333,10 +358,12 @@ export default function Game() {
     );
   }
   if (!spielLaeuft && zeit === 0) {
+    const gesamtAnzahl = besiegtePokemons.reduce((sum, poke) => sum + poke.anzahl, 0);
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <h1 className="text-4xl font-bold mb-6">Spiel vorbei!</h1>
         <p className="text-xl mb-4">Punkte: {punkte}</p>
+        <p className="text-xl mb-4">Pokemons gekillt: {gesamtAnzahl}</p>
         <div className="grid grid-cols-2 md:grid-cols-8 gap-6">
           {besiegtePokemons.map((poke) => (
             <div key={poke.name} className="text-center">
@@ -391,7 +418,7 @@ export default function Game() {
 
         {/* MUNITION */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {Array.from({ length: 6 }).map((_, index) => (
+          {Array.from({ length: magazingroesse }).map((_, index) => (
             <div
               key={index}
               className={`w-4 h-8 border-2 rounded-sm ${
@@ -419,7 +446,9 @@ export default function Game() {
             }}
             className="cursor-crosshair"
           >
-            <img src={g.sprite} alt={g.name} className="w-20" />
+            <img src={g.sprite} alt={g.name} className={`w-20 transition duration-300 ${
+              itemFreeze ? "filter brightness-75 hue-rotate-180 saturate-150" : ""
+            }`} />
             <div className="w-full h-1 bg-red-600 mt-1">
               <div
                 className="h-full bg-green-400"
@@ -447,9 +476,9 @@ export default function Game() {
                 e.stopPropagation();
                 const feedbackTexts = {
                   // mystery: "???", ////Überraschung
-                  reload: "Munition voll",
+                  reload: "Magazin erweitert",
                   freeze: "❄ Freeze!",
-                  time: "+10s",
+                  time: "+3s",
                   // bombe: "-40",
                 };
                 if (item.type === "mystery") {
@@ -460,6 +489,8 @@ export default function Game() {
                 }
 
                 setItems((prev) => prev.filter((i) => i.id !== item.id));
+                itemSound.currentTime = 0;
+                itemSound.play();
               }}
             >
               {emojiMap[item.type] || "🎁"}
