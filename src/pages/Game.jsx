@@ -2,7 +2,11 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import countdownSound from "../assets/sounds/countdown3to0.mp3";
+
 import { Link } from "react-router-dom";
+
+
+import bg1_game from "../assets/bg1_game.png";
 
 
 export default function Game() {
@@ -19,7 +23,6 @@ export default function Game() {
 
   const [items, setItems] = useState([]);
   const [itemFreeze, setItemFreeze] = useState(false);
-  
 
   const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
   const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
@@ -48,12 +51,12 @@ export default function Game() {
     },
 
     reload: () => {
-    setMagazingroesse((g) => {
-      const neueGroesse = g + 2;
-      setMunition(neueGroesse);
-      return neueGroesse;
-    });
-  },
+      setMagazingroesse((g) => {
+        const neueGroesse = g + 2;
+        setMunition(neueGroesse);
+        return neueGroesse;
+      });
+    },
     freeze: () => {
       setItemFreeze(true);
       setTimeout(() => setItemFreeze(false), 5000); //einfrieren für 5 Sekunden
@@ -122,7 +125,6 @@ export default function Game() {
     spawnLoop(); // nur einmal starten
     return () => clearTimeout(spawnTimeout); // cleanup
   }, [spielLaeuft]);
-
 
   //useEffect für die Bonus
   useEffect(() => {
@@ -227,26 +229,29 @@ export default function Game() {
 
       // automatisch nach 6 Sekunden wieder entfernen
       const entferneGegnerNachZeit = (id, verbleibend = 6000) => {
-      const intervall = 100;
-      setTimeout(() => {
-        if (itemFreeze) {
-          entferneGegnerNachZeit(id, verbleibend); // solange freeze, nichts tun
-        } else if (verbleibend <= 0) {
-          setGegner((prev) => prev.filter((g) => g.idInstance !== id));
-        } else {
-          entferneGegnerNachZeit(id, verbleibend - intervall);
-        }
-      }, intervall);
-    };
+        const intervall = 100;
+        setTimeout(() => {
+          if (itemFreeze) {
+            entferneGegnerNachZeit(id, verbleibend); // solange freeze, nichts tun
+          } else if (verbleibend <= 0) {
+            setGegner((prev) => prev.filter((g) => g.idInstance !== id));
+          } else {
+            entferneGegnerNachZeit(id, verbleibend - intervall);
+          }
+        }, intervall);
+      };
 
-    entferneGegnerNachZeit(gegnerObj.idInstance);
+      entferneGegnerNachZeit(gegnerObj.idInstance);
     } catch (err) {
       console.error("Fehler beim Laden vom Backend:", err);
     }
   };
 
   const handleSave = async () => {
-      const gesamtAnzahl = besiegtePokemons.reduce((sum, poke) => sum + poke.anzahl, 0);
+    const gesamtAnzahl = besiegtePokemons.reduce(
+      (sum, poke) => sum + poke.anzahl,
+      0
+    );
     try {
       const data = await api.post("/leaderboard", {
         username: spielerName,
@@ -359,7 +364,10 @@ export default function Game() {
     );
   }
   if (!spielLaeuft && zeit === 0) {
-    const gesamtAnzahl = besiegtePokemons.reduce((sum, poke) => sum + poke.anzahl, 0);
+    const gesamtAnzahl = besiegtePokemons.reduce(
+      (sum, poke) => sum + poke.anzahl,
+      0
+    );
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <h1 className="text-4xl font-bold mb-6">Spiel vorbei!</h1>
@@ -385,9 +393,9 @@ export default function Game() {
 
   return (
     <div className="relative w-[1280px] h-[720px] mx-auto cursor-crosshair overflow-hidden bg-black">
-      
       <img
-        src="/src/assets/bg1_game.png"
+        src={bg1_game}
+        // src="/assets/bg1_game.png"
         alt="Spielfeld"
         className="absolute inset-0 w-full h-full object-contain z-0"
       />
@@ -444,9 +452,15 @@ export default function Game() {
               }
             }}
           >
-            <img src={g.sprite} alt={g.name} className={`w-20 transition duration-300 ${
-              itemFreeze ? "filter brightness-75 hue-rotate-180 saturate-150" : ""
-            }`} />
+            <img
+              src={g.sprite}
+              alt={g.name}
+              className={`w-20 transition duration-300 ${
+                itemFreeze
+                  ? "filter brightness-75 hue-rotate-180 saturate-150"
+                  : ""
+              }`}
+            />
             <div className="w-full h-1 bg-red-600 mt-1">
               <div
                 className="h-full bg-green-400"

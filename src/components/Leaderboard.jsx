@@ -40,16 +40,20 @@ export default function Leaderboard({ scores }) {
                   </span>
                 </div>
               </div>
-             <div className="flex items-center gap-4 mb-6">
-              {/* Pokéball links */}
-              <img src={pokeballIcon} alt="Pokéball" className="w-8 h-8 self-start mt-1" />
+              <div className="flex items-center gap-4 mb-6">
+                {/* Pokéball links */}
+                <img
+                  src={pokeballIcon}
+                  alt="Pokéball"
+                  className="w-8 h-8 self-start mt-1"
+                />
 
-              {/* Texte rechts */}
-              <div className="flex flex-col">
-                <p className="text-xl">Punkte: {score.score}</p>
-                <p className="text-xl">Kills: {score.anzahl}</p>
+                {/* Texte rechts */}
+                <div className="flex flex-col">
+                  <p className="text-xl">Punkte: {score.score}</p>
+                  <p className="text-xl">Kills: {score.anzahl}</p>
+                </div>
               </div>
-            </div>
             </div>
           );
         })}

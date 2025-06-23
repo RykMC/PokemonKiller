@@ -1,11 +1,16 @@
+
 import { Link } from "react-router-dom";
+
+import bg from "../assets/bg.png";
+
 
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-black">
       {/* Hintergrundbild */}
       <img
-        src="/src/assets/bg.png"
+        src={bg}
+        // src="/assets/bg.png"
         alt="Startscreen Background"
         className="absolute inset-0 w-full h-full object-contain"
       />
@@ -17,8 +22,14 @@ export default function Home() {
             <button className="bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-3 rounded-lg text-lg shadow-lg m-7">
               Spiel starten
             </button>
+
           </Link><br />
           <Link to="/leaderboard">
+
+          </a>
+          <br></br>
+          <a href="/leaderboard">
+
             <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg text-lg shadow-lg border border-white">
               Highscores ansehen
             </button>
