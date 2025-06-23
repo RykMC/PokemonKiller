@@ -387,6 +387,7 @@ export default function Game() {
 
   return (
     <div className="relative w-[1280px] h-[720px] mx-auto cursor-crosshair overflow-hidden bg-black">
+      
       <img
         src="/src/assets/bg1_game.png"
         alt="Spielfeld"
@@ -444,7 +445,6 @@ export default function Game() {
                 handleTreffer(g.idInstance); // Schaden rein
               }
             }}
-            className="cursor-crosshair"
           >
             <img src={g.sprite} alt={g.name} className={`w-20 transition duration-300 ${
               itemFreeze ? "filter brightness-75 hue-rotate-180 saturate-150" : ""
@@ -470,7 +470,7 @@ export default function Game() {
           return (
             <div
               key={item.id}
-              className="absolute z-20 cursor-pointer text-3xl animate-bounce"
+              className="absolute z-20 text-3xl animate-bounce"
               style={{ top: item.position.top, left: item.position.left }}
               onClick={(e) => {
                 e.stopPropagation();
