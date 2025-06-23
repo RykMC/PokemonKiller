@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import countdownSound from "../assets/sounds/countdown3to0.mp3";
+import { Link } from "react-router-dom";
 
 
 export default function Game() {
@@ -373,14 +374,11 @@ export default function Game() {
             </div>
           ))}
         </div>
-        <a href="/">
-          <div
-            className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg text-lg shadow-lg border border-white"
-            onClick={handleSave}
-          >
+        <Link to="/" onClick={handleSave}>
+          <div className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg text-lg shadow-lg border border-white">
             Zurück zum Start
           </div>
-        </a>
+        </Link>
       </div>
     );
   }
