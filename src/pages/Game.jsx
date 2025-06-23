@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import countdownSound from "../assets/sounds/countdown3to0.mp3";
+import bg1_game from "../assets/bg1_game.png";
 
 export default function Game() {
   const [spielerName, setSpielerName] = useState("");
@@ -391,7 +392,8 @@ export default function Game() {
   return (
     <div className="relative w-[1280px] h-[720px] mx-auto cursor-crosshair overflow-hidden bg-black">
       <img
-        src="/assets/bg1_game.png"
+        src={bg1_game}
+        // src="/assets/bg1_game.png"
         alt="Spielfeld"
         className="absolute inset-0 w-full h-full object-contain z-0"
       />

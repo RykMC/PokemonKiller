@@ -1,9 +1,12 @@
+import bg from "../assets/bg.png";
+
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-black">
       {/* Hintergrundbild */}
       <img
-        src="/assets/bg.png"
+        src={bg}
+        // src="/assets/bg.png"
         alt="Startscreen Background"
         className="absolute inset-0 w-full h-full object-contain"
       />
