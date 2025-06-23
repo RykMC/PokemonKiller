@@ -2,6 +2,10 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import countdownSound from "../assets/sounds/countdown3to0.mp3";
+import leer from "../assets/sounds/leer.mp3";
+import nachladen from "../assets/sounds/nachladen.mp3";
+import schuss from "../assets/sounds/schuss.mp3";
+import itemsammel from "../assets/sounds/item.mp3";
 
 import { Link } from "react-router-dom";
 
@@ -24,10 +28,7 @@ export default function Game() {
   const [items, setItems] = useState([]);
   const [itemFreeze, setItemFreeze] = useState(false);
 
-  const schussSound = new Audio("/src/assets/sounds/schuss.mp3");
-  const nachladenSound = new Audio("/src/assets/sounds/nachladen.mp3");
-  const leerSound = new Audio("/src/assets/sounds/leer.mp3");
-  const itemSound = new Audio("/src/assets/sounds/item.mp3");
+  
 
   // Visuelles Feedback
   const [feedbacks, setFeedbacks] = useState([]);
@@ -68,6 +69,7 @@ export default function Game() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === "Space" && spielLaeuft) {
+        const nachladenSound = new Audio(nachladen);
         nachladenSound.currentTime = 0;
         nachladenSound.play();
         setMunition(magazingroesse);
@@ -267,11 +269,12 @@ export default function Game() {
 
   const handleShoot = () => {
     if (!spielLaeuft || munition <= 0) {
+      const leerSound = new Audio(leer);
       leerSound.currentTime = 0;
       leerSound.play();
       return;
     }
-
+    const schussSound = new Audio(schuss);
     schussSound.volume = 0.5;
     schussSound.currentTime = 0;
     schussSound.play();
@@ -501,6 +504,8 @@ export default function Game() {
                 }
 
                 setItems((prev) => prev.filter((i) => i.id !== item.id));
+
+                const itemSound = new Audio(itemsammel);
                 itemSound.currentTime = 0;
                 itemSound.play();
               }}
