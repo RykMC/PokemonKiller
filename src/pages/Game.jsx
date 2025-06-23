@@ -193,7 +193,7 @@ export default function Game() {
     ];
 
     try {
-      const res = await api.get("/pokemon/random");
+      const res = await api.get("api/pokemon/random");
       const data = res.data;
       console.log(res.data);
 
@@ -255,7 +255,7 @@ export default function Game() {
       0
     );
     try {
-      const data = await api.post("/leaderboard", {
+      const data = await api.post("api/leaderboard", {
         username: spielerName,
         score: punkte,
         anzahl: gesamtAnzahl,

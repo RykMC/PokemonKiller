@@ -9,7 +9,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     async function fetchScores() {
       try {
-        const res = await api.get("/leaderboard");
+        const res = await api.get("api/leaderboard");
         setScores(res.data.data);
       } catch (error) {
         console.error("Fehler beim Laden der Leaderboard-Daten", error);
